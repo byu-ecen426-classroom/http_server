@@ -1,3 +1,3 @@
-# Lab 5
+# HTTP Server
 
-http://ecenetworking.byu.edu/493r/labs/lab-5/
+https://ecenetworking.byu.edu/426/labs/http-server/
