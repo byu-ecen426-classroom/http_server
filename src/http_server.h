@@ -50,52 +50,119 @@ typedef struct Response {
     Header **headers;
 } Response;
 
-// Parses the options given to the program. It will return a Config struct with the necessary
-// information filled in. argc and argv are provided by main. If an error occurs in processing the
-// arguments and options (such as an invalid option), this function will print the correct message
-// and then exit.
-Config http_server_parse_arguments(int argc, char *argv[]);
+/*
+Description:
+    Parses the commandline arguments and options given to the program.
+Arguments:
+    int argc: the amount of arguments provided to the program (provided by the main function)
+    char *argv[]: the array of arguments provided to the program (provided by the main function)
+    Config *config: An empty Config struct that will be filled in by this function.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
+int http_server_parse_arguments(int argc, char *argv[], Config *config);
 
-////////////////////////////////////////////////////
-///////////// SOCKET RELATED FUNCTIONS /////////////
-////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+/////////////////////// SOCKET RELATED FUNCTIONS //////////////////////
+///////////////////////////////////////////////////////////////////////
 
-// Create and bind to a server socket using the provided configuration. A socket file descriptor
-// should be returned. If something fails, a -1 must be returned.
+/*
+Description:
+    Create and bind to a server socket using the provided configuration.
+Arguments:
+    Config config: A config struct with the necessary information.
+Return value:
+    Returns the socket file descriptor or -1 if an error occurs.
+*/
 int http_server_create(Config config);
 
-// Listen on the provided server socket for incoming clients. When a client connects, return the
-// client socket file descriptor. This is a blocking call. If an error occurs, return a -1.
+/*
+Description:
+    Listen on the provided server socket for incoming clients. When a client connects, return the
+    client socket file descriptor. *This is a blocking call.*
+Arguments:
+    int socket: The server socket to accept on.
+Return value:
+    Returns the client socket file descriptor or -1 if an error occurs.
+*/
 int http_server_accept(int socket);
 
-// Read data from the provided client socket, parse the data, and return a Request struct. This
-// function will allocate the necessary buffers to fill in the Request struct. The buffers contained
-// in the Request struct must be freed using http_server_client_cleanup. If an
-// error occurs, return an empty request and this function will free any allocated resources.
-Request http_server_receive_request(int socket);
+/*
+Description:
+    Read data from the provided client socket, parse the data, and fill in the Request struct.
+    The buffers contained in the Request struct must be freed using http_server_client_cleanup.
+Arguments:
+    int socket: The client socket to read from.
+    Request* request: The request struct that will be filled in.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
+int http_server_receive_request(int socket, Request *request);
 
-// Sends the provided Response struct on the provided client socket.
+/*
+Description:
+    Sends the provided Response struct on the provided client socket.
+Arguments:
+    int socket: The client socket to send the data with.
+    Response response: The struct containing the response data.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
 int http_server_send_response(int socket, Response response);
 
-// Closes the provided client socket and cleans up allocated resources.
-void http_server_client_cleanup(int socket, Request request, Response response);
+/*
+Description:
+    Cleans up allocated resources and sockets.
+Arguments:
+    int socket: The client socket to close.
+    Request request: The strcut to clean up.
+    Response response: The struct to clean up.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
+int http_server_client_cleanup(int socket, Request request, Response response);
 
-// Closes provided server socket
-void http_server_cleanup(int socket);
+/*
+Description:
+    Cleans up allocated resources and sockets.
+Arguments:
+    int socket: The server socket to close.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
+int http_server_cleanup(int socket);
 
-////////////////////////////////////////////////////
-//////////// PROTOCOL RELATED FUNCTIONS ////////////
-////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+////////////////////// PROTOCOL RELATED FUNCTIONS /////////////////////
+///////////////////////////////////////////////////////////////////////
 
 // A helper function to be used inside of http_server_receive_request. This should not be used
 // directly in main.c.
-Request http_server_parse_request(char *buf);
+/*
+Description:
+    Converts a string into a request struct. A helper function to be used
+    inside of http_server_receive_request. This should not be used directly
+    in main.c.
+Arguments:
+    char *buf: The string containing the request.
+    Request *request: The request struct that will be filled in by buf.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
+int http_server_parse_request(char *buf, Request *request);
 
-// Convert a Request struct into a Response struct. Use relative_path to determine the path of the
-// file being requested. This function will allocate the necessary buffers to fill in the Response
-// struct. The buffers contained in the Resposne struct must be freeded using
-// http_server_client_cleanup. If an error occurs, an empty Response will be returned and this
-// function will free any allocated resources.
-Response http_server_process_request(Request request, char *relative_path);
+/*
+Description:
+    Convert a Request struct into a Response struct. This function will allocate the necessary
+    buffers to fill in the Response struct. The buffers contained in the Response struct must be
+    freeded using http_server_client_cleanup.
+Arguments:
+    Request request: The request struct that will be processed.
+    char *relative_path: The path to server the files from.
+    Response *response: The response struct that will be filled in.
+Return value:
+    Returns a 1 on failure, 0 on success.
+*/
+int http_server_process_request(Request request, char *relative_path, Response *response);
 
 #endif
